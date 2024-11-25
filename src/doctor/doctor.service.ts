@@ -23,8 +23,6 @@ export class DoctorService {
       WHERE "textSearch" @@ to_tsquery('english', ${searchQuery})
       ORDER BY rank DESC
     `;
-
-    // Fallback: If no results, return all rows
     if (result.length === 0) {
       console.log('No matches found. Returning all records as fallback.');
       return this.prisma.doctor.findMany();
