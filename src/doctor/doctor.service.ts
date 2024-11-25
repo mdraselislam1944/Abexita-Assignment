@@ -12,8 +12,25 @@ export class DoctorService {
     return result;
   }
 
-  findAll() {
-    return this.prisma.doctor.findMany();
+  async findAll(keywords: string[]): Promise<any> {
+    const searchQuery = keywords.map((keyword) => `${keyword}:*`).join(' | ');
+    console.log('Search Query:', searchQuery);
+
+    const result = await this.prisma.$queryRaw<any[]>`
+      SELECT *, 
+             ts_rank("textSearch", to_tsquery('english', ${searchQuery})) AS rank
+      FROM "doctor"
+      WHERE "textSearch" @@ to_tsquery('english', ${searchQuery})
+      ORDER BY rank DESC
+    `;
+
+    // Fallback: If no results, return all rows
+    if (result.length === 0) {
+      console.log('No matches found. Returning all records as fallback.');
+      return this.prisma.doctor.findMany();
+    }
+
+    return result;
   }
 
   findOne(id: number) {
