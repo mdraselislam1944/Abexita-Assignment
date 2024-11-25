@@ -7,6 +7,9 @@ import {
   Patch,
   Post,
 } from '@nestjs/common';
+import nlp from 'compromise';
+import { PorterStemmer } from 'natural';
+import { removeStopwords } from 'stopword';
 import { DoctorService } from './doctor.service';
 import { CreateDoctorDto } from './dto/create-doctor.dto';
 import { UpdateDoctorDto } from './dto/update-doctor.dto';
@@ -21,7 +24,19 @@ export class DoctorController {
   }
 
   @Get()
-  findAll() {
+  async findAll() {
+    const oldString = 'Find me the best doctors in Uttara Dhaka.';
+    const newString = removeStopwords(oldString.split(' ')).join(' ');
+    const cleanString = newString.replace(/[^\w\s]/gi, '');
+    const doc = nlp(cleanString);
+    const nouns = doc.nouns().out('array');
+    const adjectives = doc.adjectives().out('array');
+    const words = [...new Set([...nouns, ...adjectives])];
+    const splitWords = words.flatMap((word) => word.split(' '));
+    const stemmedWords = splitWords.map((word) =>
+      PorterStemmer.stem(word.toLowerCase()),
+    );
+    console.log('Result:', stemmedWords);
     return this.doctorService.findAll();
   }
 
