@@ -13,8 +13,10 @@ export class DoctorService {
   }
 
   async findAll(keywords: string[]): Promise<any> {
+    if (keywords.length == 0) {
+      return await this.prisma.doctor.findMany();
+    }
     const searchQuery = keywords.join(' | ');
-
     const result = await this.prisma.$queryRaw`
       SELECT * FROM "doctor"
       WHERE
@@ -36,8 +38,25 @@ export class DoctorService {
           WHERE to_tsvector(branch) @@ to_tsquery(${searchQuery})
         )
         OR to_tsvector("areaOfPractice") @@ to_tsquery(${searchQuery})
+        OR "type" ILIKE '%' || ${keywords.join(' ')} || '%'
+        OR "orgOrPracticeId" ILIKE '%' || ${keywords.join(' ')} || '%'
+        OR "usernameOrBusinessUrl" ILIKE '%' || ${keywords.join(' ')} || '%'
+        OR "name" ILIKE '%' || ${keywords.join(' ')} || '%'
+        OR "category" ILIKE '%' || ${keywords.join(' ')} || '%'
+        OR EXISTS (
+          SELECT 1 FROM unnest("subCategory") AS sub
+          WHERE sub ILIKE '%' || ${keywords.join(' ')} || '%'
+        )
+        OR EXISTS (
+          SELECT 1 FROM unnest("zones") AS zone
+          WHERE zone ILIKE '%' || ${keywords.join(' ')} || '%'
+        )
+        OR EXISTS (
+          SELECT 1 FROM unnest("branches") AS branch
+          WHERE branch ILIKE '%' || ${keywords.join(' ')} || '%'
+        )
+        OR "areaOfPractice" ILIKE '%' || ${keywords.join(' ')} || '%'
     `;
-
     return result;
   }
 

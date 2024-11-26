@@ -16,7 +16,7 @@ datasource db {
 
 
 model doctor {
-  id                Int      @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   type              String   @default("Organization")
   orgOrPracticeId   String
   usernameOrBusinessUrl String

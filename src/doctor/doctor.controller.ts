@@ -11,7 +11,6 @@ import {
 import nlp from 'compromise';
 import { PorterStemmer } from 'natural';
 import { removeStopwords } from 'stopword';
-import fuzzball from 'fuzzball';
 import { DoctorService } from './doctor.service';
 import { CreateDoctorDto } from './dto/create-doctor.dto';
 import { UpdateDoctorDto } from './dto/update-doctor.dto';
@@ -27,17 +26,20 @@ export class DoctorController {
 
   @Get()
   async findAll(@Query('keywords') keywords: string) {
-    const newString = removeStopwords(keywords.split(' ')).join(' ');
-    const cleanString = newString.replace(/[^\w\s]/gi, '');
-    const doc = nlp(cleanString);
-    const nouns = doc.nouns().out('array');
-    const adjectives = doc.adjectives().out('array');
-    const words = [...new Set([...nouns, ...adjectives])];
-    const splitWords = words.flatMap((word) => word.split(' '));
-    const stemmedWords = splitWords.map((word) =>
-      PorterStemmer.stem(word.toLowerCase()),
-    );
-    return this.doctorService.findAll(stemmedWords);
+    if (keywords) {
+      const newString = removeStopwords(keywords.split(' ')).join(' ');
+      const cleanString = newString.replace(/[^\w\s]/gi, '');
+      const doc = nlp(cleanString);
+      const nouns = doc.nouns().out('array');
+      const adjectives = doc.adjectives().out('array');
+      const words = [...new Set([...nouns, ...adjectives])];
+      const splitWords = words.flatMap((word) => word.split(' '));
+      const stemmedWords = splitWords.map((word) =>
+        PorterStemmer.stem(word.toLowerCase()),
+      );
+      return this.doctorService.findAll(stemmedWords);
+    }
+    return this.doctorService.findAll([]);
   }
 
   @Get(':id')
