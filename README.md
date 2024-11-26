@@ -103,7 +103,7 @@ The `DoctorController` exposes several endpoints for CRUD operations on doctor d
 
 ### Create a Doctor
 
-Create a new doctor in the database.
+Create a new doctor in the database. Sample data give on sample-data-.txt this file.
 
 **POST** `/doctor`
 

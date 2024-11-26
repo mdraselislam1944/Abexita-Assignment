@@ -1,5 +1,4 @@
 export class CreateDoctorDto {
-  id?: number;
   type?: string;
   orgOrPracticeId: string;
   usernameOrBusinessUrl: string;
