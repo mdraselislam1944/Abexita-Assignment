@@ -13,20 +13,30 @@ export class DoctorService {
   }
 
   async findAll(keywords: string[]): Promise<any> {
-    const searchQuery = keywords.map((keyword) => `${keyword}:*`).join(' | ');
-    console.log('Search Query:', searchQuery);
+    const searchQuery = keywords.join(' | ');
 
-    const result = await this.prisma.$queryRaw<any[]>`
-      SELECT *, 
-             ts_rank("textSearch", to_tsquery('english', ${searchQuery})) AS rank
-      FROM "doctor"
-      WHERE "textSearch" @@ to_tsquery('english', ${searchQuery})
-      ORDER BY rank DESC
+    const result = await this.prisma.$queryRaw`
+      SELECT * FROM "doctor"
+      WHERE
+        to_tsvector("type") @@ to_tsquery(${searchQuery})
+        OR to_tsvector("orgOrPracticeId") @@ to_tsquery(${searchQuery})
+        OR to_tsvector("usernameOrBusinessUrl") @@ to_tsquery(${searchQuery})
+        OR to_tsvector("name") @@ to_tsquery(${searchQuery})
+        OR to_tsvector("category") @@ to_tsquery(${searchQuery})
+        OR EXISTS (
+          SELECT 1 FROM unnest("subCategory") AS sub
+          WHERE to_tsvector(sub) @@ to_tsquery(${searchQuery})
+        )
+        OR EXISTS (
+          SELECT 1 FROM unnest("zones") AS zone
+          WHERE to_tsvector(zone) @@ to_tsquery(${searchQuery})
+        )
+        OR EXISTS (
+          SELECT 1 FROM unnest("branches") AS branch
+          WHERE to_tsvector(branch) @@ to_tsquery(${searchQuery})
+        )
+        OR to_tsvector("areaOfPractice") @@ to_tsquery(${searchQuery})
     `;
-    if (result.length === 0) {
-      console.log('No matches found. Returning all records as fallback.');
-      return this.prisma.doctor.findMany();
-    }
 
     return result;
   }

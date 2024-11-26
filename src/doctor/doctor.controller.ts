@@ -11,6 +11,7 @@ import {
 import nlp from 'compromise';
 import { PorterStemmer } from 'natural';
 import { removeStopwords } from 'stopword';
+import fuzzball from 'fuzzball';
 import { DoctorService } from './doctor.service';
 import { CreateDoctorDto } from './dto/create-doctor.dto';
 import { UpdateDoctorDto } from './dto/update-doctor.dto';
